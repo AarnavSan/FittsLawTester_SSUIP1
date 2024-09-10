@@ -509,18 +509,21 @@ class FittsTestUI extends UIClass {
 
                 // a bit more left to do...
                 // === YOUR CODE HERE ===
+                //Make the background visible
                 this.theBackground.visible = true;
 
             break;
             case 'begin_trial':
                 console.log("Begin trial");
                 // === YOUR CODE HERE ===
+
                 //Set the background text to be invisible
                 this.theBackground.visible = false;
 
                 //Set the Reticle to be Visible
                 this.theReticle.visible = true;
 
+                //Redraw the Canvas UI
                 this.needsRedraw = true;
                 this.redraw();
 
@@ -528,23 +531,34 @@ class FittsTestUI extends UIClass {
             case 'in_trial':
                 console.log("In Trial");
                 // === YOUR CODE HERE ===
+                //Set the Reticle to be invisible
                 this.theReticle.visible = false
+
+                //Set the Target to be Visible
                 this.theTarget.visible = true
+
+                //Redraw the Canvas UI
                 this.needsRedraw = true;
                 this.redraw();
             break;
             case 'ended':
                 console.log("ended");
                 // === YOUR CODE HERE ===
+                //Change the background messages to show the finished status message
                 this.theBackground.msg1 = "Done! Refresh the Page to start again.";
                 this.theBackground.msg2 = "";
                 this.theBackground.msg3 = "";
 
+                //Set the Background to be Visible
                 this.theBackground.visible = true;
+
+                //Set the Target to be invisible
                 this.theTarget.visible = false;
 
+                //Redraw the Canvas UI
                 this.needsRedraw = true;
                 this.redraw();
+
                 // produce a dump of our data records on the console
                 this.presentData();
             break;
@@ -581,6 +595,7 @@ class FittsTestUI extends UIClass {
             //Set the target's center coordinates an diameter to random coordinates
             this.theTarget.newGeom(targX, targY, targDiam);
 
+            //Set the state to begin trial
             this.configure('begin_trial')
 
         }
@@ -710,9 +725,15 @@ class Target extends ScreenObject{
         {
             //Drawing a filled circled with Target Color
             ctx.beginPath();
-            ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI);
-            ctx.fillStyle = this.TARGET_COLOR;
+
+            //Use the Target's new randomly generated center co-ordinates
+            ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI); 
+
+            //Fill the circle with the target color
+            ctx.fillStyle = this.TARGET_COLOR; 
             ctx.fill();
+
+            //Render out the filled circle
             ctx.stroke();
         }
     }
@@ -724,7 +745,7 @@ class Target extends ScreenObject{
         
         // === YOUR CODE HERE ===
         //Checking if the point is within the circle
-        //Finding the distance between the center and the point using Euclidean Formula
+        //Finding the distance between the center and the point using Euclidean Distance Formula
         let distance : number = Math.sqrt(Math.pow(this.centerX - ptX, 2) + Math.pow(this.centerY - ptY, 2) );
 
         //if the distance between center and point is less than or equal to radius
@@ -732,16 +753,17 @@ class Target extends ScreenObject{
         if(distance <= this.radius)
         {
             //Implementation to handle clicking target circle
+
+            //Start a new Trial
             this.parentUI.newTrial();
-            
-            //Calculate distance between the reticle and target
-            let dist:number =  Math.sqrt(Math.pow(this.parentUI.theReticle.centerX - this.centerX, 2) + Math.pow(this.parentUI.theReticle.centerY - this.centerY, 2) );
+
+            //Record where the target was clicked and how big it was
             this.parentUI.recordTrialEnd(this.centerX, this.centerY, this.diam);
+
+            //Return true when the target is clicked
             return true;
 
         }
-        
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
         return false;
         // === END OF CODE TO BE REMOVED ===
     }
@@ -838,17 +860,18 @@ class Reticle extends Target {
     override pickedBy(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
+        //Use a fixed offset to allow the user to click close enough to the reticle
+        const offset : number = 5;
 
         //Check if the cursor is clicked close to the reticle
         //adding and subtracting a small amount and checking whether the points are within it
         //Gives the user a range close to the reticle to work with instead of the exact center point
-        if(((ptX >= this.centerX - 5) && (ptX <= this.centerX + 5)) && ((ptY >= this.centerY - 5) && (ptY <= this.centerY + 5))){
+        if(((ptX >= this.centerX - offset) && (ptX <= this.centerX + offset)) && ((ptY >= this.centerY - offset) && (ptY <= this.centerY + offset))){
             this.parentUI.configure('in_trial');
             this.parentUI.startTrial(this.centerX, this.centerY);
             return true;
         }
         else
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
             return false;
         // === END OF CODE TO BE REMOVED ===
     }
@@ -859,13 +882,7 @@ class Reticle extends Target {
     // expect to be in the 'begin_trial' interface state and will respond 
     // by starting the trial timer and moving to the 'in_trial' state.
     override handleClickAt(ptX : number, ptY : number) : boolean {
-        
-        // === YOUR CODE HERE ===
-        if(this.parentUI.currentState=='begin_trial'){
-            this.pickedBy(ptX, ptY);
-        }
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
-        return false;
+        return this.pickedBy(ptX, ptY);
         // === END OF CODE TO BE REMOVED ===
     }
 }
@@ -929,12 +946,16 @@ class BackgroundDisplay extends ScreenObject{
 
         // === YOUR CODE HERE ===
 
-        //Draw the initial text instructions on canvas
+        //Draw the initial text instructions on canvas for each message
+        //Add the fontHeight after each text message to add an equal distance
         ctx.beginPath();
+
         ctx.fillText(this.msg1,xpos,ypos);
         ypos += fontHeight;
+
         ctx.fillText(this.msg2,xpos,ypos);
         ypos += fontHeight;
+
         ctx.fillText(this.msg3,xpos,ypos);
         ctx.stroke();
     }
