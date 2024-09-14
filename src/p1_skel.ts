@@ -750,22 +750,7 @@ class Target extends ScreenObject{
 
         //if the distance between center and point is less than or equal to radius
         //Then the user has clicked inside the circle
-        if(distance <= this.radius)
-        {
-            //Implementation to handle clicking target circle
-
-            //Start a new Trial
-            this.parentUI.newTrial();
-
-            //Record where the target was clicked and how big it was
-            this.parentUI.recordTrialEnd(this.centerX, this.centerY, this.diam);
-
-            //Return true when the target is clicked
-            return true;
-
-        }
-        return false;
-        // === END OF CODE TO BE REMOVED ===
+        return distance <= this.radius;
     }
 
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
@@ -776,7 +761,20 @@ class Target extends ScreenObject{
     override handleClickAt(ptX : number, ptY : number) : boolean {
         
         // === YOUR CODE HERE ===
-        return this.pickedBy(ptX, ptY);
+        if(this.pickedBy(ptX, ptY))
+            {
+                //Implementation to handle clicking target circle
+    
+                //Start a new Trial
+                this.parentUI.newTrial();
+    
+                //Record where the target was clicked and how big it was
+                this.parentUI.recordTrialEnd(this.centerX, this.centerY, this.diam);
+    
+                //Return true when the target is clicked
+                return true;
+            }
+            return false;
     }
 }
 
@@ -866,13 +864,9 @@ class Reticle extends Target {
         //Check if the cursor is clicked close to the reticle
         //adding and subtracting a small amount and checking whether the points are within it
         //Gives the user a range close to the reticle to work with instead of the exact center point
-        if(((ptX >= this.centerX - offset) && (ptX <= this.centerX + offset)) && ((ptY >= this.centerY - offset) && (ptY <= this.centerY + offset))){
-            this.parentUI.configure('in_trial');
-            this.parentUI.startTrial(this.centerX, this.centerY);
-            return true;
-        }
-        else
-            return false;
+
+        return(((ptX >= this.centerX - offset) && (ptX <= this.centerX + offset)) && 
+        ((ptY >= this.centerY - offset) && (ptY <= this.centerY + offset)));
         // === END OF CODE TO BE REMOVED ===
     }
 
@@ -882,7 +876,16 @@ class Reticle extends Target {
     // expect to be in the 'begin_trial' interface state and will respond 
     // by starting the trial timer and moving to the 'in_trial' state.
     override handleClickAt(ptX : number, ptY : number) : boolean {
-        return this.pickedBy(ptX, ptY);
+        if(this.pickedBy(ptX, ptY)){
+            // === YOUR CODE HERE ===
+            //Start a new Trial
+            this.parentUI.configure('in_trial');
+            this.parentUI.startTrial(this.centerX, this.centerY);
+
+            //Return true when the reticle is clicked
+            return true;
+        }
+        return false;
         // === END OF CODE TO BE REMOVED ===
     }
 }

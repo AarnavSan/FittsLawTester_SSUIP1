@@ -486,6 +486,7 @@ var FittsTestUI = /** @class */ (function (_super) {
                 this.theReticle.visible = false;
                 // a bit more left to do...
                 // === YOUR CODE HERE ===
+                //Make the background visible
                 this.theBackground.visible = true;
                 break;
             case 'begin_trial':
@@ -495,25 +496,33 @@ var FittsTestUI = /** @class */ (function (_super) {
                 this.theBackground.visible = false;
                 //Set the Reticle to be Visible
                 this.theReticle.visible = true;
+                //Redraw the Canvas UI
                 this.needsRedraw = true;
                 this.redraw();
                 break;
             case 'in_trial':
                 console.log("In Trial");
                 // === YOUR CODE HERE ===
+                //Set the Reticle to be invisible
                 this.theReticle.visible = false;
+                //Set the Target to be Visible
                 this.theTarget.visible = true;
+                //Redraw the Canvas UI
                 this.needsRedraw = true;
                 this.redraw();
                 break;
             case 'ended':
                 console.log("ended");
                 // === YOUR CODE HERE ===
+                //Change the background messages to show the finished status message
                 this.theBackground.msg1 = "Done! Refresh the Page to start again.";
                 this.theBackground.msg2 = "";
                 this.theBackground.msg3 = "";
+                //Set the Background to be Visible
                 this.theBackground.visible = true;
+                //Set the Target to be invisible
                 this.theTarget.visible = false;
+                //Redraw the Canvas UI
                 this.needsRedraw = true;
                 this.redraw();
                 // produce a dump of our data records on the console
@@ -541,6 +550,7 @@ var FittsTestUI = /** @class */ (function (_super) {
             this.theReticle.newGeom(retX, retY);
             //Set the target's center coordinates an diameter to random coordinates
             this.theTarget.newGeom(targX, targY, targDiam);
+            //Set the state to begin trial
             this.configure('begin_trial');
         }
     };
@@ -627,10 +637,14 @@ var Target = /** @class */ (function (_super) {
     // If the diameter is supplied, both the width and height are set to that value.
     Target.prototype.newGeom = function (newCentX, newCentY, newDiam) {
         // === YOUR CODE HERE ===
+        //Assign the bounding box's new center X and Y coordinates
         this.centerX = newCentX;
         this.centerY = newCentY;
+        //If the diameter is supplied, the height and width is set to the new diameter
         if (!(typeof (newDiam) === "undefined")) {
             this.diam = newDiam;
+            this.w = newDiam;
+            this.h = newDiam;
         }
         this.declareDamaged();
     };
@@ -645,9 +659,12 @@ var Target = /** @class */ (function (_super) {
         if (this.parentUI.currentState == 'in_trial') {
             //Drawing a filled circled with Target Color
             ctx.beginPath();
+            //Use the Target's new randomly generated center co-ordinates
             ctx.arc(this.centerX, this.centerY, this.radius, 0, 2 * Math.PI);
+            //Fill the circle with the target color
             ctx.fillStyle = this.TARGET_COLOR;
             ctx.fill();
+            //Render out the filled circle
             ctx.stroke();
         }
     };
@@ -656,21 +673,11 @@ var Target = /** @class */ (function (_super) {
     Target.prototype.pickedBy = function (ptX, ptY) {
         // === YOUR CODE HERE ===
         //Checking if the point is within the circle
-        //Finding the distance between the center and the point using Euclidean Formula
+        //Finding the distance between the center and the point using Euclidean Distance Formula
         var distance = Math.sqrt(Math.pow(this.centerX - ptX, 2) + Math.pow(this.centerY - ptY, 2));
         //if the distance between center and point is less than or equal to radius
         //Then the user has clicked inside the circle
-        if (distance <= this.radius) {
-            //Implementation to handle clicking target circle
-            this.parentUI.newTrial();
-            //Calculate distance between the reticle and target
-            var dist = Math.sqrt(Math.pow(this.parentUI.theReticle.centerX - this.centerX, 2) + Math.pow(this.parentUI.theReticle.centerY - this.centerY, 2));
-            this.parentUI.recordTrialEnd(this.centerX, this.centerY, this.diam);
-            return true;
-        }
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
-        return false;
-        // === END OF CODE TO BE REMOVED ===
+        return distance <= this.radius;
     };
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
     // Handle click input.  The interface should be in the 'in_trial' state,
@@ -678,7 +685,16 @@ var Target = /** @class */ (function (_super) {
     // and starting a new one.
     Target.prototype.handleClickAt = function (ptX, ptY) {
         // === YOUR CODE HERE ===
-        return this.pickedBy(ptX, ptY);
+        if (this.pickedBy(ptX, ptY)) {
+            //Implementation to handle clicking target circle
+            //Start a new Trial
+            this.parentUI.newTrial();
+            //Record where the target was clicked and how big it was
+            this.parentUI.recordTrialEnd(this.centerX, this.centerY, this.diam);
+            //Return true when the target is clicked
+            return true;
+        }
+        return false;
     };
     return Target;
 }(ScreenObject));
@@ -742,17 +758,13 @@ var Reticle = /** @class */ (function (_super) {
     // Picking function. We are only picked within our small center region.
     Reticle.prototype.pickedBy = function (ptX, ptY) {
         // === YOUR CODE HERE ===
+        //Use a fixed offset to allow the user to click close enough to the reticle
+        var offset = 5;
         //Check if the cursor is clicked close to the reticle
         //adding and subtracting a small amount and checking whether the points are within it
         //Gives the user a range close to the reticle to work with instead of the exact center point
-        if (((ptX >= this.centerX - 5) && (ptX <= this.centerX + 5)) && ((ptY >= this.centerY - 5) && (ptY <= this.centerY + 5))) {
-            this.parentUI.configure('in_trial');
-            this.parentUI.startTrial(this.centerX, this.centerY);
-            return true;
-        }
-        else
-            // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
-            return false;
+        return (((ptX >= this.centerX - offset) && (ptX <= this.centerX + offset)) &&
+            ((ptY >= this.centerY - offset) && (ptY <= this.centerY + offset)));
         // === END OF CODE TO BE REMOVED ===
     };
     // . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . 
@@ -760,11 +772,14 @@ var Reticle = /** @class */ (function (_super) {
     // expect to be in the 'begin_trial' interface state and will respond 
     // by starting the trial timer and moving to the 'in_trial' state.
     Reticle.prototype.handleClickAt = function (ptX, ptY) {
-        // === YOUR CODE HERE ===
-        if (this.parentUI.currentState == 'begin_trial') {
-            this.pickedBy(ptX, ptY);
+        if (this.pickedBy(ptX, ptY)) {
+            // === YOUR CODE HERE ===
+            //Start a new Trial
+            this.parentUI.configure('in_trial');
+            this.parentUI.startTrial(this.centerX, this.centerY);
+            //Return true when the reticle is clicked
+            return true;
         }
-        // === REMOVE THE FOLLOWING CODE (which is here so the skeleton code compiles) ===
         return false;
         // === END OF CODE TO BE REMOVED ===
     };
@@ -834,7 +849,8 @@ var BackgroundDisplay = /** @class */ (function (_super) {
         var ypos = 20 + fontHeight;
         var xpos = 10;
         // === YOUR CODE HERE ===
-        //Draw the initial text instructions on canvas
+        //Draw the initial text instructions on canvas for each message
+        //Add the fontHeight after each text message to add an equal distance
         ctx.beginPath();
         ctx.fillText(this.msg1, xpos, ypos);
         ypos += fontHeight;
